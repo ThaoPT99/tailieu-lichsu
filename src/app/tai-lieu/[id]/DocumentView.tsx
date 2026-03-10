@@ -56,6 +56,8 @@ export function DocumentView({ document }: { document: Document }) {
           setError("Không thể tải xem trước");
           setLoading(false);
         });
+    } else if (document.fileType === "zip") {
+      setLoading(false);
     } else if (document.fileType === "pptx") {
       let pptxObjectUrl: string | null = null;
       fetch(`/api/preview/${document.id}`)
@@ -170,6 +172,18 @@ export function DocumentView({ document }: { document: Document }) {
         <h3 className="mt-4 font-semibold text-amber-900">File PowerPoint</h3>
         <p className="mt-2 text-stone-600">
           {error ?? "Xem trước không khả dụng. Vui lòng thanh toán để tải xuống file PPTX gốc."}
+        </p>
+      </div>
+    );
+  }
+
+  if (document.fileType === "zip") {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center">
+        <p className="text-6xl">📦</p>
+        <h3 className="mt-4 font-semibold text-amber-900">File ZIP</h3>
+        <p className="mt-2 text-stone-600">
+          Tải xuống để xem nội dung bên trong. Không có xem trước.
         </p>
       </div>
     );

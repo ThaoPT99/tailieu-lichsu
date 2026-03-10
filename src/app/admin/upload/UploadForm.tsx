@@ -30,8 +30,8 @@ export function UploadForm() {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx", "pptx"].includes(ext ?? "")) {
-      setMessage({ type: "error", text: "Chỉ chấp nhận file PDF, DOCX, PPTX" });
+    if (!["pdf", "docx", "pptx", "zip"].includes(ext ?? "")) {
+      setMessage({ type: "error", text: "Chỉ chấp nhận file PDF, DOCX, PPTX, ZIP" });
       return;
     }
 
@@ -103,11 +103,11 @@ export function UploadForm() {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-stone-700">File (PDF, DOCX, PPTX) *</label>
+        <label className="block text-sm font-medium text-stone-700">File (PDF, DOCX, PPTX, ZIP) *</label>
         <input
           type="file"
           name="file"
-          accept=".pdf,.docx,.pptx"
+          accept=".pdf,.docx,.pptx,.zip"
           required
           onChange={handleFileChange}
           className="mt-1 w-full"

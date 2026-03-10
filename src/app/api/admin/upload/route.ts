@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx", "pptx"].includes(ext ?? "")) {
-      return NextResponse.json({ error: "Chỉ chấp nhận PDF, DOCX, PPTX" }, { status: 400 });
+    if (!["pdf", "docx", "pptx", "zip"].includes(ext ?? "")) {
+      return NextResponse.json({ error: "Chỉ chấp nhận PDF, DOCX, PPTX, ZIP" }, { status: 400 });
     }
 
     const uploadDir = getUploadsDir();

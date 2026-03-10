@@ -32,7 +32,9 @@ export default async function TaiLieuPage() {
                     ? "📄"
                     : doc.fileType === "docx"
                       ? "📝"
-                      : "📊"}
+                      : doc.fileType === "zip"
+                        ? "📦"
+                        : "📊"}
                 </span>
               </div>
               <div className="p-4">

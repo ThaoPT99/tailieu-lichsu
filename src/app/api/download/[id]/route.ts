@@ -45,9 +45,11 @@ export async function GET(
   }
 
   const buffer = fs.readFileSync(filePath);
+  const contentType =
+    document.fileType === "zip" ? "application/zip" : "application/octet-stream";
   return new NextResponse(buffer, {
     headers: {
-      "Content-Type": "application/octet-stream",
+      "Content-Type": contentType,
       "Content-Disposition": `attachment; filename="${encodeURIComponent(document.fileName)}"`,
     },
   });
