@@ -8,6 +8,7 @@ export function DocFilters() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? "";
   const grade = searchParams.get("grade") ?? "";
+  const price = searchParams.get("price") ?? "";
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,7 +47,16 @@ export function DocFilters() {
           </option>
         ))}
       </select>
-      {(category || grade) && (
+      <select
+        value={price}
+        onChange={(e) => updateFilter("price", e.target.value)}
+        className="rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm"
+      >
+        <option value="">Tất cả giá</option>
+        <option value="free">Miễn phí</option>
+        <option value="paid">Có phí</option>
+      </select>
+      {(category || grade || price) && (
         <button
           type="button"
           onClick={() => router.push("/tai-lieu")}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { DocFilters } from "./DocFilters";
 import { getCategoryLabel } from "@/lib/doc-types";
@@ -11,17 +12,22 @@ type Doc = Awaited<ReturnType<typeof prisma.document.findMany>>[number];
 export default async function TaiLieuPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; grade?: string }>;
+  searchParams: Promise<{ category?: string; grade?: string; price?: string }>;
 }) {
-  const { category, grade } = await searchParams;
+  const { category, grade, price } = await searchParams;
 
-  const where: { category?: string; grade?: number } = {};
+  const where: Prisma.DocumentWhereInput = {};
   if (category && ["giao_an", "de_kiem_tra"].includes(category)) {
     where.category = category;
   }
   if (grade) {
     const g = parseInt(grade, 10);
     if ([6, 7, 8, 9].includes(g)) where.grade = g;
+  }
+  if (price === "free") {
+    where.price = 0;
+  } else if (price === "paid") {
+    where.price = { gt: 0 };
   }
 
   const documents = await prisma.document.findMany({
