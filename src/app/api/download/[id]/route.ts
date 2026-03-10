@@ -4,6 +4,8 @@ import { getUploadsDir } from "@/lib/uploads";
 import path from "path";
 import fs from "fs";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -14,7 +16,7 @@ export async function GET(
   const orderId = searchParams.get("orderId");
 
   const document = await prisma.document.findUnique({ where: { id } });
-  if (!document) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!document || !document.fileUrl) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   let canDownload = false;
   if (document.price === 0 || free) {

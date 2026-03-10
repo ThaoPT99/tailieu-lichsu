@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/uploads";
 import path from "path";
@@ -26,11 +28,11 @@ export async function DELETE(
     await prisma.purchase.deleteMany({ where: { documentId: id } });
     await prisma.document.delete({ where: { id } });
 
-    const mainPath = path.join(uploadsDir, document.fileUrl);
-    if (fs.existsSync(mainPath)) {
+    const mainPath = document.fileUrl ? path.join(uploadsDir, document.fileUrl) : null;
+    if (mainPath && fs.existsSync(mainPath)) {
       fs.unlinkSync(mainPath);
     }
-    if (document.previewFileUrl) {
+    if (document.previewFileUrl && !document.previewFileUrl.includes("..")) {
       const previewPath = path.join(uploadsDir, document.previewFileUrl);
       if (fs.existsSync(previewPath)) {
         fs.unlinkSync(previewPath);

@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
+
+const PdfPreviewNoCopy = dynamic(
+  () => import("@/components/PdfPreviewNoCopy").then((m) => m.PdfPreviewNoCopy),
+  { ssr: false }
+);
 
 type Document = {
   id: string;
@@ -100,19 +106,9 @@ export function DocumentView({ document }: { document: Document }) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-white p-4">
         <h3 className="mb-4 font-semibold text-amber-900">Xem trước</h3>
-        <iframe
-          src={pdfUrl}
-          className="h-[600px] w-full rounded-lg border"
-          title="Xem trước PDF"
-        />
-        <a
-          href={`/api/preview/${document.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 inline-block text-sm text-amber-600 hover:underline"
-        >
-          Mở trong tab mới
-        </a>
+        <div className="h-[600px] overflow-hidden rounded-lg border [user-select:none] [-webkit-user-select:none]">
+          <PdfPreviewNoCopy url={pdfUrl} className="h-full" />
+        </div>
       </div>
     );
   }
@@ -139,7 +135,9 @@ export function DocumentView({ document }: { document: Document }) {
       <div className="rounded-2xl border border-amber-200 bg-white p-4">
         <h3 className="mb-4 font-semibold text-amber-900">Xem trước</h3>
         <div
-          className="prose prose-stone max-h-[600px] overflow-y-auto rounded-lg border p-6"
+          className="prose prose-stone max-h-[600px] select-none overflow-y-auto rounded-lg border p-6"
+          style={{ userSelect: "none", WebkitUserSelect: "none" }}
+          onContextMenu={(e) => e.preventDefault()}
           dangerouslySetInnerHTML={{ __html: content ?? "" }}
         />
       </div>
@@ -160,19 +158,9 @@ export function DocumentView({ document }: { document: Document }) {
           <h3 className="mb-4 font-semibold text-amber-900">
             Xem trước (bản PDF) • Tải xuống nhận file PPTX gốc
           </h3>
-          <iframe
-            src={pdfUrl}
-            className="h-[600px] w-full rounded-lg border"
-            title="Xem trước PowerPoint"
-          />
-          <a
-            href={`/api/preview/${document.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 inline-block text-sm text-amber-600 hover:underline"
-          >
-            Mở trong tab mới
-          </a>
+          <div className="h-[600px] overflow-hidden rounded-lg border [user-select:none] [-webkit-user-select:none]">
+            <PdfPreviewNoCopy url={pdfUrl} className="h-full" />
+          </div>
         </div>
       );
     }

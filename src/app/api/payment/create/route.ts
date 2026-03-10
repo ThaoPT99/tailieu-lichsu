@@ -46,6 +46,8 @@ async function createPayOSUrl(orderId: string, amount: number, documentId: strin
   return data?.data?.checkoutUrl ?? null;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const { documentId, method, amount } = await req.json();

@@ -36,6 +36,8 @@ function verifyPayOSWebhook(data: Record<string, unknown>, signature: string): b
   return expected === signature;
 }
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

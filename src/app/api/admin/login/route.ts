@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyAdmin, createAdminSession, ensureAdminExists } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     await ensureAdminExists();

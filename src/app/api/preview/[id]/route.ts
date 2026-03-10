@@ -5,13 +5,15 @@ import path from "path";
 import fs from "fs";
 import mammoth from "mammoth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const document = await prisma.document.findUnique({ where: { id } });
-  if (!document) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!document || !document.fileUrl) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   if (document.fileUrl.includes("..") || document.fileUrl.includes("/") || document.fileUrl.includes("\\")) {
     return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
@@ -67,7 +69,7 @@ export async function GET(
     }
   }
 
-  if (document.fileType === "pptx" && document.previewFileUrl) {
+  if (document.fileType === "pptx" && document.previewFileUrl && !document.previewFileUrl.includes("..")) {
     const previewPath = path.join(uploadsDir, document.previewFileUrl);
     if (!document.previewFileUrl.includes("..") && fs.existsSync(previewPath)) {
       const buffer = fs.readFileSync(previewPath);
