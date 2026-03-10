@@ -5,7 +5,24 @@ import { v4 as uuidv4 } from "uuid";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3008";
 
-function createVNPayUrl(orderId: string, amount: number, documentId: string) {
+function getVietnamTimeString(d: Date): string {
+  const pad = (n: number) => (n < 10 ? "0" + n : String(n));
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+    .formatToParts(d)
+    .reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {} as Record<string, string>);
+  return `${parts.year}${parts.month}${parts.day}${parts.hour}${parts.minute}${parts.second}`;
+}
+
+function createVNPayUrl(orderId: string, amount: number, documentId: string, clientIp: string) {
   const tmnCode = process.env.VNPAY_TMN_CODE;
   const hashSecret = process.env.VNPAY_HASH_SECRET;
   const vnpUrl = process.env.VNPAY_URL;
@@ -14,12 +31,10 @@ function createVNPayUrl(orderId: string, amount: number, documentId: string) {
     return null;
   }
 
-  const pad = (n: number) => (n < 10 ? "0" + n : String(n));
   const now = new Date();
-  const fmt = (d: Date) =>
-    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-  const createDate = fmt(now);
-  const expireDate = fmt(new Date(now.getTime() + 15 * 60 * 1000));
+  const createDate = getVietnamTimeString(now);
+  const expireDate = getVietnamTimeString(new Date(now.getTime() + 15 * 60 * 1000));
+  const ipAddr = clientIp || "127.0.0.1";
 
   const vnpParams: Record<string, string> = {
     vnp_Version: "2.1.0",
@@ -33,7 +48,7 @@ function createVNPayUrl(orderId: string, amount: number, documentId: string) {
     vnp_Locale: "vn",
     vnp_ReturnUrl: `${APP_URL}/api/payment/vnpay/callback`,
     vnp_IpnUrl: `${APP_URL}/api/payment/vnpay/ipn`,
-    vnp_IpAddr: "127.0.0.1",
+    vnp_IpAddr: ipAddr,
     vnp_CreateDate: createDate,
     vnp_ExpireDate: expireDate,
   };
@@ -94,9 +109,16 @@ async function createMomoUrl(orderId: string, amount: number, documentId: string
   return data?.payUrl ?? null;
 }
 
+function getClientIp(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]!.trim();
+  return req.headers.get("x-real-ip") || "127.0.0.1";
+}
+
 export async function POST(req: Request) {
   try {
     const { documentId, method, amount, returnUrl } = await req.json();
+    const clientIp = getClientIp(req);
 
     const document = await prisma.document.findUnique({ where: { id: documentId } });
     if (!document) {
@@ -127,7 +149,7 @@ export async function POST(req: Request) {
 
     let url: string | null = null;
     if (method === "vnpay") {
-      url = createVNPayUrl(orderId, document.price, documentId);
+      url = createVNPayUrl(orderId, document.price, documentId, clientIp);
     } else if (method === "momo") {
       url = await createMomoUrl(orderId, document.price, documentId);
     }
