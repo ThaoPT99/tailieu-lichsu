@@ -40,18 +40,6 @@ export function AdminDashboard() {
     });
   };
 
-  const applySale = (percent: number) => {
-    const base = editForm.price > 0 ? editForm.price : (editing?.price ?? 0);
-    if (base > 0) {
-      const salePrice = Math.round(base * (1 - percent / 100));
-      setEditForm((f) => ({
-        ...f,
-        price: salePrice,
-        originalPrice: String(base),
-      }));
-    }
-  };
-
   const handleSaveEdit = async () => {
     if (!editing) return;
     const res = await fetch(`/api/admin/documents/${editing.id}`, {
@@ -209,7 +197,18 @@ export function AdminDashboard() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-stone-700">Giá bán (VNĐ) *</label>
+                <label className="block text-sm font-medium text-stone-700">Giá gốc (VNĐ)</label>
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Bỏ trống = không hiển thị sale"
+                  value={editForm.originalPrice}
+                  onChange={(e) => setEditForm((f) => ({ ...f, originalPrice: e.target.value }))}
+                  className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-stone-700">Giá bán hiện tại (VNĐ) *</label>
                 <input
                   type="number"
                   min={0}
@@ -217,40 +216,9 @@ export function AdminDashboard() {
                   onChange={(e) => setEditForm((f) => ({ ...f, price: parseInt(e.target.value, 10) || 0 }))}
                   className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-stone-700">Giá gốc (VNĐ) - để hiển thị sale</label>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Bỏ trống = không sale"
-                  value={editForm.originalPrice}
-                  onChange={(e) => setEditForm((f) => ({ ...f, originalPrice: e.target.value }))}
-                  className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
-                />
-                <div className="mt-2 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => applySale(30)}
-                    className="rounded bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800 hover:bg-amber-200"
-                  >
-                    Sale 30%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applySale(50)}
-                    className="rounded bg-red-100 px-3 py-1 text-sm font-medium text-red-800 hover:bg-red-200"
-                  >
-                    Sale 50%
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applySale(70)}
-                    className="rounded bg-red-200 px-3 py-1 text-sm font-medium text-red-900 hover:bg-red-300"
-                  >
-                    Sale 70%
-                  </button>
-                </div>
+                <p className="mt-1 text-xs text-stone-500">
+                  Nếu có giá gốc và giá bán &lt; giá gốc → tự hiển thị % giảm
+                </p>
               </div>
             </div>
             <div className="mt-6 flex justify-end gap-3">
