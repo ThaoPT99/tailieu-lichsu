@@ -31,7 +31,9 @@ export default async function ChuyenKhoanPage({
   const recipientName = process.env.BANK_RECIPIENT_NAME ?? "Chưa cấu hình";
   const contactInfo = process.env.CONTACT_INFO ?? "Liên hệ quản trị viên";
 
-  const downloadUrl = `${APP_URL}/api/download/${documentId}?orderId=${orderId}`;
+  const downloadUrl = APP_URL
+    ? `${APP_URL.replace(/\/$/, "")}/api/download/${documentId}?orderId=${orderId}`
+    : `/api/download/${documentId}?orderId=${orderId}`;
 
   return (
     <div className="mx-auto max-w-xl px-4 py-12">

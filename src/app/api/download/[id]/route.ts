@@ -35,7 +35,11 @@ export async function GET(
 
   const filePath = path.join(getUploadsDir(), document.fileUrl);
   if (!fs.existsSync(filePath)) {
-    return NextResponse.json({ error: "File not found" }, { status: 404 });
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Không tìm thấy file</title></head><body style="font-family:system-ui,sans-serif;max-width:480px;margin:80px auto;padding:24px;text-align:center"><h1 style="color:#b45309">File không tìm thấy</h1><p style="color:#666">Tài liệu có thể chưa được tải lên trên server. Vui lòng liên hệ quản trị viên.</p><a href="/" style="color:#b45309;text-decoration:underline">← Về trang chủ</a></body></html>`;
+    return new NextResponse(html, {
+      status: 404,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
   }
 
   const buffer = fs.readFileSync(filePath);

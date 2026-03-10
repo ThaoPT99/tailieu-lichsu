@@ -37,13 +37,14 @@ Admin được tạo tự động khi đăng nhập lần đầu nếu chưa có
 
 **Chuyển khoản** hoạt động ngay không cần VNPAY/Momo. Admin vào Quản trị → xác nhận đơn khi khách đã chuyển tiền.
 
-## 4. Railway Volume (lưu file upload)
+## 4. Railway Volume (lưu file upload) – **BẮT BUỘC**
 
-Để file upload không mất khi redeploy:
+Nếu không có Volume, file upload sẽ **mất sau mỗi lần deploy** → download bị 404.
 
 1. **+ New** → **Volume**
 2. Mount path: `/data`
 3. Trong Variables của service web thêm: `UPLOADS_DIR=/data`
+4. **Redeploy** và **tải lên lại tài liệu** qua trang Quản trị (file cũ không còn)
 
 ## 5. Custom domain (tùy chọn)
 
