@@ -1,1 +1,5 @@
 # Node 18+ (Prisma 6 tương thích 18.18+, 20.x, 22.x)
+
+# DATABASE_URL cần cho prisma generate (postinstall) - dùng placeholder nếu chưa có
+[phases.install]
+cmds = ["export DATABASE_URL=\"${DATABASE_URL:-postgresql://localhost:5432/placeholder}\" && npm ci"]
