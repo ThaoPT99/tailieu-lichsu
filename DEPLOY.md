@@ -27,8 +27,15 @@ Trong service **web** (Next.js), thêm các biến môi trường:
 | `VNPAY_URL` | URL cổng thanh toán | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` |
 | `ADMIN_USERNAME` | Tên đăng nhập admin | `admin` |
 | `ADMIN_PASSWORD` | Mật khẩu admin (plain text, tự hash khi tạo) | `your-secure-password` |
+| `BANK_NAME` | Tên ngân hàng (cho Chuyển khoản) | Vietcombank |
+| `BANK_ACCOUNT_NUMBER` | Số tài khoản | 0123456789 |
+| `BANK_BRANCH` | Chi nhánh | Hà Nội |
+| `BANK_RECIPIENT_NAME` | Chủ tài khoản | NGUYEN VAN A |
+| `CONTACT_INFO` | Thông tin liên hệ khi có thắc mắc | Email/SĐT |
 
 Admin được tạo tự động khi đăng nhập lần đầu nếu chưa có tài khoản nào.
+
+**Chuyển khoản** hoạt động ngay không cần VNPAY/Momo. Admin vào Quản trị → xác nhận đơn khi khách đã chuyển tiền.
 
 ## 4. Railway Volume (lưu file upload)
 

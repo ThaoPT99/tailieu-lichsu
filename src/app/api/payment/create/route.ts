@@ -148,7 +148,9 @@ export async function POST(req: Request) {
     });
 
     let url: string | null = null;
-    if (method === "vnpay") {
+    if (method === "bank") {
+      url = `${APP_URL}/thanh-toan/chuyen-khoan?orderId=${orderId}&documentId=${documentId}`;
+    } else if (method === "vnpay") {
       url = createVNPayUrl(orderId, document.price, documentId, clientIp);
     } else if (method === "momo") {
       url = await createMomoUrl(orderId, document.price, documentId);
@@ -156,7 +158,7 @@ export async function POST(req: Request) {
 
     if (!url) {
       return NextResponse.json({
-        error: "Chưa cấu hình thanh toán. Vui lòng liên hệ quản trị viên.",
+        error: "Chưa cấu hình thanh toán. Vui lòng chọn Chuyển khoản hoặc liên hệ quản trị viên.",
       }, { status: 500 });
     }
 
