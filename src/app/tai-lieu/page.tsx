@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 type Doc = Awaited<ReturnType<typeof prisma.document.findMany>>[number];
 
 export default async function TaiLieuPage() {

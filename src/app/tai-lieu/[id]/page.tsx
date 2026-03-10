@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { DocumentView } from "./DocumentView";
 import { DownloadSection } from "./DownloadSection";
 
+export const dynamic = "force-dynamic";
+
 export default async function DocumentDetailPage({
   params,
 }: {
