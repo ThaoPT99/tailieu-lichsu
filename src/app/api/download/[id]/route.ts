@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUploadsDir } from "@/lib/uploads";
 import path from "path";
 import fs from "fs";
 
@@ -32,7 +33,7 @@ export async function GET(
     );
   }
 
-  const filePath = path.join(process.cwd(), "uploads", document.fileUrl);
+  const filePath = path.join(getUploadsDir(), document.fileUrl);
   if (!fs.existsSync(filePath)) {
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getUploadsDir } from "@/lib/uploads";
 import path from "path";
 import fs from "fs";
 import mammoth from "mammoth";
@@ -16,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: "Invalid file path" }, { status: 400 });
   }
 
-  const uploadsDir = path.join(process.cwd(), "uploads");
+  const uploadsDir = getUploadsDir();
   const filePath = path.join(uploadsDir, document.fileUrl);
 
   if (!fs.existsSync(uploadsDir)) {

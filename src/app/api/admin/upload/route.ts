@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getUploadsDir } from "@/lib/uploads";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Chỉ chấp nhận PDF, DOCX, PPTX" }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), "uploads");
+    const uploadDir = getUploadsDir();
     await mkdir(uploadDir, { recursive: true });
 
     const fileId = uuidv4();
