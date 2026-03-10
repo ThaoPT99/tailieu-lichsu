@@ -1,3 +1,1 @@
-# Node 22+ (Prisma 7 yêu cầu 20.19+ / 22.12+)
-[phases.setup]
-nixPkgs = ["nodejs_22"]
+# Node 18+ (Prisma 6 tương thích 18.18+, 20.x, 22.x)

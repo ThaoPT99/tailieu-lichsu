@@ -19,7 +19,7 @@ Trong service **web** (Next.js), thêm các biến môi trường:
 
 | Biến | Mô tả | Ví dụ |
 |------|-------|-------|
-| `NIXPACKS_NODE_VERSION` | **Bắt buộc nếu build lỗi Node** | `22` |
+| `NIXPACKS_NODE_VERSION` | Tùy chọn nếu cần Node cụ thể | `20` |
 | `DATABASE_URL` | Từ PostgreSQL service | (Railway điền) |
 | `NEXT_PUBLIC_APP_URL` | URL app sau khi deploy | `https://xxx.railway.app` |
 | `VNPAY_TMN_CODE` | Mã merchant VNPAY | Từ sandbox.vnpayment.vn |
