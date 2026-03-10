@@ -44,11 +44,25 @@ export default async function TaiLieuPage() {
                     {doc.description}
                   </p>
                 )}
-                <p className="mt-2 font-medium text-amber-700">
-                  {doc.price > 0
-                    ? `${doc.price.toLocaleString("vi-VN")} ₫`
-                    : "Miễn phí"}
-                </p>
+                <div className="mt-2">
+                  {doc.price > 0 ? (
+                    <p className="font-medium text-amber-700">
+                      {doc.originalPrice != null && doc.originalPrice > doc.price && (
+                        <>
+                          <span className="text-stone-400 line-through mr-1">
+                            {doc.originalPrice.toLocaleString("vi-VN")} ₫
+                          </span>
+                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700 mr-1">
+                            -{Math.round((1 - doc.price / doc.originalPrice) * 100)}%
+                          </span>
+                        </>
+                      )}
+                      {doc.price.toLocaleString("vi-VN")} ₫
+                    </p>
+                  ) : (
+                    <p className="font-medium text-amber-700">Miễn phí</p>
+                  )}
+                </div>
               </div>
             </Link>
           ))}

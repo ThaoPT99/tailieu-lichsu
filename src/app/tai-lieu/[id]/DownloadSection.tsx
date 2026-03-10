@@ -6,6 +6,7 @@ type Document = {
   id: string;
   title: string;
   price: number;
+  originalPrice?: number | null;
   fileType: string;
 };
 
@@ -61,7 +62,22 @@ export function DownloadSection({ document }: { document: Document }) {
 
   return (
     <div className="rounded-2xl border border-amber-200 bg-white p-6">
-      <h3 className="font-semibold text-amber-900">Tải xuống ({document.price.toLocaleString("vi-VN")} ₫)</h3>
+      <h3 className="font-semibold text-amber-900">
+        Tải xuống{" "}
+        {document.originalPrice != null && document.originalPrice > document.price ? (
+          <span>
+            <span className="line-through text-stone-400">
+              {document.originalPrice.toLocaleString("vi-VN")} ₫
+            </span>{" "}
+            <span className="rounded bg-red-100 px-1.5 py-0.5 text-sm font-medium text-red-700">
+              -{Math.round((1 - document.price / document.originalPrice) * 100)}%
+            </span>{" "}
+            {document.price.toLocaleString("vi-VN")} ₫
+          </span>
+        ) : (
+          `(${document.price.toLocaleString("vi-VN")} ₫)`
+        )}
+      </h3>
       <p className="mt-1 text-sm text-stone-500">
         Thanh toán qua PayOS để tải xuống
       </p>

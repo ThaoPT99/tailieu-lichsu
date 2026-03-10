@@ -26,9 +26,23 @@ export default async function DocumentDetailPage({
         )}
         <p className="mt-2 text-sm text-stone-500">
           {document.fileType.toUpperCase()} •{" "}
-          {document.price > 0
-            ? `${document.price.toLocaleString("vi-VN")} ₫ để tải xuống`
-            : "Miễn phí"}
+          {document.price > 0 ? (
+            <span>
+              {document.originalPrice != null && document.originalPrice > document.price && (
+                <>
+                  <span className="line-through text-stone-400">
+                    {document.originalPrice.toLocaleString("vi-VN")} ₫
+                  </span>
+                  <span className="ml-1 rounded bg-red-100 px-1.5 py-0.5 text-xs font-medium text-red-700">
+                    -{Math.round((1 - document.price / document.originalPrice) * 100)}%
+                  </span>{" "}
+                </>
+              )}
+              {document.price.toLocaleString("vi-VN")} ₫ để tải xuống
+            </span>
+          ) : (
+            "Miễn phí"
+          )}
         </p>
       </div>
 

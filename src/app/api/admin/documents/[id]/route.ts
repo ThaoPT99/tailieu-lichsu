@@ -1,11 +1,60 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
-
-export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/uploads";
 import path from "path";
 import fs from "fs";
+
+export const dynamic = "force-dynamic";
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const isAdmin = await getAdminSession();
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const document = await prisma.document.findUnique({ where: { id } });
+  if (!document) {
+    return NextResponse.json({ error: "Tài liệu không tồn tại" }, { status: 404 });
+  }
+
+  try {
+    const body = await req.json();
+    const data: { title?: string; description?: string | null; price?: number; originalPrice?: number | null } = {};
+
+    if (typeof body.title === "string" && body.title.trim()) {
+      data.title = body.title.trim();
+    }
+    if (body.description !== undefined) {
+      data.description = body.description && String(body.description).trim() ? String(body.description).trim() : null;
+    }
+    if (typeof body.price === "number" && body.price >= 0) {
+      data.price = Math.round(body.price);
+    }
+    if (body.originalPrice !== undefined) {
+      if (body.originalPrice === null || body.originalPrice === "") {
+        data.originalPrice = null;
+      } else {
+        const n = typeof body.originalPrice === "number" ? body.originalPrice : parseInt(String(body.originalPrice), 10);
+        data.originalPrice = !isNaN(n) && n >= 0 ? n : null;
+      }
+    }
+
+    await prisma.document.update({
+      where: { id },
+      data,
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("Update document error:", e);
+    return NextResponse.json({ error: "Không thể cập nhật" }, { status: 500 });
+  }
+}
 
 export async function DELETE(
   _req: NextRequest,
