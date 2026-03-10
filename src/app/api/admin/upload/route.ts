@@ -5,7 +5,6 @@ import { getUploadsDir } from "@/lib/uploads";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { convertPptxToPdf } from "@/lib/pptx-to-pdf";
 
 export async function POST(req: Request) {
   const isAdmin = await getAdminSession();
@@ -16,6 +15,7 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const previewFile = formData.get("previewFile") as File | null;
     const title = formData.get("title") as string;
     const description = (formData.get("description") as string) || "";
     const price = parseInt((formData.get("price") as string) || "0", 10);
@@ -41,11 +41,13 @@ export async function POST(req: Request) {
     await writeFile(filePath, buffer);
 
     let previewFileUrl: string | null = null;
-    if (ext === "pptx") {
-      const pdfFileName = await convertPptxToPdf(filePath, uploadDir);
-      if (pdfFileName) {
-        previewFileUrl = pdfFileName;
-      }
+    if (ext === "pptx" && previewFile && previewFile.size > 0) {
+      const previewId = uuidv4();
+      const previewFileName = `${previewId}.pdf`;
+      const previewPath = path.join(uploadDir, previewFileName);
+      const previewBytes = await previewFile.arrayBuffer();
+      await writeFile(previewPath, Buffer.from(previewBytes));
+      previewFileUrl = previewFileName;
     }
 
     const document = await prisma.document.create({

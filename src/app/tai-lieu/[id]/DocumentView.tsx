@@ -63,7 +63,7 @@ export function DocumentView({ document }: { document: Document }) {
           setLoading(false);
         })
         .catch(() => {
-          setError("Không có xem trước. Cài LibreOffice để tạo bản PDF xem trước khi tải lên.");
+          setError("Không có xem trước. Vui lòng thanh toán để tải xuống file PPTX gốc.");
           setLoading(false);
         });
       return () => {
