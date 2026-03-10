@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DOC_CATEGORIES, DOC_GRADES } from "@/lib/doc-types";
 
 export function UploadForm() {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,8 @@ export function UploadForm() {
     const title = formData.get("title") as string;
     const description = (formData.get("description") as string) || "";
     const price = parseInt((formData.get("price") as string) || "0", 10);
+    const category = formData.get("category") as string;
+    const grade = formData.get("grade") as string;
     const file = formData.get("file") as File;
     const previewFile = formData.get("previewFile") as File | null;
 
@@ -47,6 +50,8 @@ export function UploadForm() {
       uploadData.append("title", title);
       uploadData.append("description", description);
       uploadData.append("price", String(price));
+      if (category) uploadData.append("category", category);
+      if (grade) uploadData.append("grade", grade);
       if (previewFile && previewFile.size > 0) {
         uploadData.append("previewFile", previewFile);
       }
@@ -82,6 +87,36 @@ export function UploadForm() {
           className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
           placeholder="VD: Giáo án Lịch sử 6 - Bài 1"
         />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm font-medium text-stone-700">Loại tài liệu</label>
+          <select
+            name="category"
+            className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
+          >
+            <option value="">— Chọn loại —</option>
+            {DOC_CATEGORIES.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-stone-700">Lớp</label>
+          <select
+            name="grade"
+            className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
+          >
+            <option value="">— Chọn lớp —</option>
+            {DOC_GRADES.map((g) => (
+              <option key={g} value={g}>
+                Lớp {g}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-stone-700">Mô tả (tùy chọn)</label>

@@ -21,6 +21,9 @@ export async function POST(req: Request) {
     const title = formData.get("title") as string;
     const description = (formData.get("description") as string) || "";
     const price = parseInt((formData.get("price") as string) || "0", 10);
+    const category = (formData.get("category") as string) || null;
+    const gradeRaw = formData.get("grade") as string | null;
+    const grade = gradeRaw ? parseInt(gradeRaw, 10) : null;
 
     if (!file || !title) {
       return NextResponse.json({ error: "Thiếu file hoặc tên" }, { status: 400 });
@@ -52,6 +55,9 @@ export async function POST(req: Request) {
       previewFileUrl = previewFileName;
     }
 
+    const validCategory = ["giao_an", "de_kiem_tra"].includes(category) ? category : null;
+    const validGrade = grade && [6, 7, 8, 9].includes(grade) ? grade : null;
+
     const document = await prisma.document.create({
       data: {
         title,
@@ -61,6 +67,8 @@ export async function POST(req: Request) {
         fileType: ext ?? "pdf",
         previewFileUrl,
         price,
+        category: validCategory,
+        grade: validGrade,
       },
     });
 

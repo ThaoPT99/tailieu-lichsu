@@ -24,7 +24,14 @@ export async function PATCH(
 
   try {
     const body = await req.json();
-    const data: { title?: string; description?: string | null; price?: number; originalPrice?: number | null } = {};
+    const data: {
+      title?: string;
+      description?: string | null;
+      price?: number;
+      originalPrice?: number | null;
+      category?: string | null;
+      grade?: number | null;
+    } = {};
 
     if (typeof body.title === "string" && body.title.trim()) {
       data.title = body.title.trim();
@@ -42,6 +49,13 @@ export async function PATCH(
         const n = typeof body.originalPrice === "number" ? body.originalPrice : parseInt(String(body.originalPrice), 10);
         data.originalPrice = !isNaN(n) && n >= 0 ? n : null;
       }
+    }
+    if (body.category !== undefined) {
+      data.category = ["giao_an", "de_kiem_tra"].includes(body.category) ? body.category : null;
+    }
+    if (body.grade !== undefined) {
+      const g = typeof body.grade === "number" ? body.grade : parseInt(String(body.grade), 10);
+      data.grade = g && [6, 7, 8, 9].includes(g) ? g : null;
     }
 
     await prisma.document.update({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { DOC_CATEGORIES, DOC_GRADES, getCategoryLabel } from "@/lib/doc-types";
 
 type Document = {
   id: string;
@@ -10,6 +11,8 @@ type Document = {
   fileType: string;
   price: number;
   originalPrice: number | null;
+  category: string | null;
+  grade: number | null;
   createdAt: string;
 };
 
@@ -17,7 +20,14 @@ export function AdminDashboard() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Document | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", price: 0, originalPrice: "" });
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    price: 0,
+    originalPrice: "",
+    category: "" as string,
+    grade: "" as string,
+  });
 
   const loadData = () => {
     fetch("/api/admin/documents")
@@ -37,6 +47,8 @@ export function AdminDashboard() {
       description: doc.description ?? "",
       price: doc.price,
       originalPrice: doc.originalPrice != null ? String(doc.originalPrice) : "",
+      category: doc.category ?? "",
+      grade: doc.grade != null ? String(doc.grade) : "",
     });
   };
 
@@ -50,6 +62,8 @@ export function AdminDashboard() {
         description: editForm.description || null,
         price: editForm.price,
         originalPrice: editForm.originalPrice ? parseInt(editForm.originalPrice, 10) : null,
+        category: editForm.category || null,
+        grade: editForm.grade ? parseInt(editForm.grade, 10) : null,
       }),
     });
     if (res.ok) {
@@ -110,7 +124,10 @@ export function AdminDashboard() {
                   Tên tài liệu
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-amber-900">
-                  Loại
+                  Phân loại
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-amber-900">
+                  Định dạng
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-amber-900">
                   Giá
@@ -124,6 +141,9 @@ export function AdminDashboard() {
               {documents.map((doc) => (
                 <tr key={doc.id} className="border-b border-amber-50">
                   <td className="px-4 py-3 font-medium">{doc.title}</td>
+                  <td className="px-4 py-3 text-stone-600">
+                    {getCategoryLabel(doc.category)} {doc.grade != null ? `· Lớp ${doc.grade}` : ""}
+                  </td>
                   <td className="px-4 py-3 text-stone-500">{doc.fileType.toUpperCase()}</td>
                   <td className="px-4 py-3">
                     {doc.price > 0 ? (
@@ -195,6 +215,38 @@ export function AdminDashboard() {
                   rows={3}
                   className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
                 />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium text-stone-700">Loại tài liệu</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
+                  >
+                    <option value="">— Chưa phân loại —</option>
+                    {DOC_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-stone-700">Lớp</label>
+                  <select
+                    value={editForm.grade}
+                    onChange={(e) => setEditForm((f) => ({ ...f, grade: e.target.value }))}
+                    className="mt-1 w-full rounded-lg border border-amber-200 px-4 py-2"
+                  >
+                    <option value="">— Chọn lớp —</option>
+                    {DOC_GRADES.map((g) => (
+                      <option key={g} value={g}>
+                        Lớp {g}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-stone-700">Giá gốc (VNĐ)</label>

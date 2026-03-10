@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getCategoryLabel } from "@/lib/doc-types";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,15 @@ export default async function HomePage() {
                   <h3 className="font-semibold text-amber-900 line-clamp-2 group-hover:text-amber-700">
                     {doc.title}
                   </h3>
-                  <p className="mt-1 text-sm text-stone-500">{doc.fileType.toUpperCase()}</p>
+                  <p className="mt-1 text-sm text-stone-500">
+                    {[
+                      doc.category ? getCategoryLabel(doc.category) : null,
+                      doc.grade != null ? `Lớp ${doc.grade}` : null,
+                      doc.fileType.toUpperCase(),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
                   <p className="mt-2 font-medium text-amber-700">
                     {doc.price > 0
                       ? `${doc.price.toLocaleString("vi-VN")} ₫`

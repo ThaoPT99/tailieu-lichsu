@@ -17,6 +17,8 @@ model Document {
   previewFileUrl  String?  // PDF preview cho PPTX
   price           Int      @default(0)   // Giá bán thực tế
   originalPrice   Int?                   // Giá gốc (để hiển thị sale)
+  category        String?  // giao_an | de_kiem_tra
+  grade           Int?     // 6 | 7 | 8 | 9
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   purchases       Purchase[]
