@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       previewFileUrl = previewFileName;
     }
 
-    const validCategory = ["giao_an", "de_kiem_tra"].includes(category) ? category : null;
+    const validCategory = category && ["giao_an", "de_kiem_tra"].includes(category) ? category : null;
     const validGrade = grade && [6, 7, 8, 9].includes(grade) ? grade : null;
 
     const document = await prisma.document.create({
