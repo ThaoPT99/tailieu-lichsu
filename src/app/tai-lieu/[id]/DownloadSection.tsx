@@ -13,7 +13,7 @@ export function DownloadSection({ document }: { document: Document }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const handleDownload = async (method: "vnpay" | "momo" | "bank") => {
+  const handleDownload = async (method: "vnpay" | "momo" | "bank" | "payos") => {
     if (document.price === 0) {
       window.location.href = `/api/download/${document.id}?free=1`;
       return;
@@ -71,6 +71,13 @@ export function DownloadSection({ document }: { document: Document }) {
         </p>
       )}
       <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          onClick={() => handleDownload("payos")}
+          disabled={loading}
+          className="rounded-lg border-2 border-emerald-600 bg-white px-6 py-2 font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+        >
+          PayOS
+        </button>
         <button
           onClick={() => handleDownload("bank")}
           disabled={loading}

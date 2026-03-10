@@ -65,6 +65,47 @@ function createVNPayUrl(orderId: string, amount: number, documentId: string, cli
   return url;
 }
 
+async function createPayOSUrl(orderId: string, amount: number, documentId: string) {
+  const clientId = process.env.PAYOS_CLIENT_ID;
+  const apiKey = process.env.PAYOS_API_KEY;
+  const checksumKey = process.env.PAYOS_CHECKSUM_KEY;
+
+  if (!clientId || !apiKey || !checksumKey) return null;
+
+  const orderCode = parseInt(orderId.replace("TL", "").split("-")[0] || "0", 10);
+  const description = `TL ${String(orderCode).slice(-6)}`;
+  const returnUrl = `${APP_URL}/thanh-toan/thanh-cong?orderId=${orderId}&documentId=${documentId}`;
+  const cancelUrl = `${APP_URL}/tai-lieu/${documentId}`;
+
+  const dataStr = `amount=${amount}&cancelUrl=${cancelUrl}&description=${description}&orderCode=${orderCode}&returnUrl=${returnUrl}`;
+  const signature = crypto
+    .createHmac("sha256", checksumKey)
+    .update(dataStr)
+    .digest("hex");
+
+  const body = JSON.stringify({
+    orderCode,
+    amount,
+    description,
+    cancelUrl,
+    returnUrl,
+    items: [{ name: "Tai lieu", quantity: 1, price: amount }],
+    signature,
+  });
+
+  const res = await fetch("https://api-merchant.payos.vn/v2/payment-requests", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-client-id": clientId,
+      "x-api-key": apiKey,
+    },
+    body,
+  });
+  const data = await res.json();
+  return data?.data?.checkoutUrl ?? null;
+}
+
 async function createMomoUrl(orderId: string, amount: number, documentId: string) {
   const partnerCode = process.env.MOMO_PARTNER_CODE;
   const accessKey = process.env.MOMO_ACCESS_KEY;
@@ -152,6 +193,8 @@ export async function POST(req: Request) {
       url = `${APP_URL}/thanh-toan/chuyen-khoan?orderId=${orderId}&documentId=${documentId}`;
     } else if (method === "vnpay") {
       url = createVNPayUrl(orderId, document.price, documentId, clientIp);
+    } else if (method === "payos") {
+      url = await createPayOSUrl(orderId, document.price, documentId);
     } else if (method === "momo") {
       url = await createMomoUrl(orderId, document.price, documentId);
     }

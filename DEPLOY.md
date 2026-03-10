@@ -25,6 +25,9 @@ Trong service **web** (Next.js), thêm các biến môi trường:
 | `VNPAY_TMN_CODE` | Mã merchant VNPAY | Từ sandbox.vnpayment.vn |
 | `VNPAY_HASH_SECRET` | Secret key VNPAY | Từ sandbox |
 | `VNPAY_URL` | URL cổng thanh toán | `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html` |
+| `PAYOS_CLIENT_ID` | PayOS (chỉ cần CCCD) | Từ my.payos.vn |
+| `PAYOS_API_KEY` | PayOS | Từ my.payos.vn |
+| `PAYOS_CHECKSUM_KEY` | PayOS | Từ my.payos.vn |
 | `ADMIN_USERNAME` | Tên đăng nhập admin | `admin` |
 | `ADMIN_PASSWORD` | Mật khẩu admin (plain text, tự hash khi tạo) | `your-secure-password` |
 | `BANK_NAME` | Tên ngân hàng (cho Chuyển khoản) | Vietcombank |
@@ -35,7 +38,9 @@ Trong service **web** (Next.js), thêm các biến môi trường:
 
 Admin được tạo tự động khi đăng nhập lần đầu nếu chưa có tài khoản nào.
 
-**Chuyển khoản** hoạt động ngay không cần VNPAY/Momo. Admin vào Quản trị → xác nhận đơn khi khách đã chuyển tiền.
+**PayOS** (miễn phí, chỉ cần CCCD): Đăng ký my.payos.vn → tạo kênh → cấu hình Webhook URL = `https://your-domain/api/payment/payos/webhook`
+
+**Chuyển khoản** hoạt động ngay không cần cấu hình. Admin vào Quản trị → xác nhận đơn khi khách đã chuyển tiền.
 
 ## 4. Railway Volume (lưu file upload) – **BẮT BUỘC**
 
