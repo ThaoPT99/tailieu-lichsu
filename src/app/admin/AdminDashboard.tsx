@@ -11,28 +11,14 @@ type Document = {
   createdAt: string;
 };
 
-type Purchase = {
-  id: string;
-  orderId: string;
-  amount: number;
-  status: string;
-  createdAt: string;
-  document: { title: string; id: string };
-};
-
 export function AdminDashboard() {
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [pendingPurchases, setPendingPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = () => {
     fetch("/api/admin/documents")
       .then((res) => res.json())
-      .then((data) => setDocuments(data));
-    fetch("/api/admin/purchases")
-      .then((res) => res.json())
-      .then((data) => setPendingPurchases(Array.isArray(data) ? data : []))
-      .catch(() => setPendingPurchases([]))
+      .then((data) => setDocuments(data))
       .finally(() => setLoading(false));
   };
 
@@ -40,12 +26,9 @@ export function AdminDashboard() {
     loadData();
   }, []);
 
-  const handleConfirmPayment = async (orderId: string) => {
-    const res = await fetch("/api/admin/purchases/confirm", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId }),
-    });
+  const handleDelete = async (docId: string, title: string) => {
+    if (!confirm(`Xóa tài liệu "${title}"? Hành động không thể hoàn tác.`)) return;
+    const res = await fetch(`/api/admin/documents/${docId}`, { method: "DELETE" });
     if (res.ok) loadData();
   };
 
@@ -73,35 +56,6 @@ export function AdminDashboard() {
           </button>
         </div>
       </div>
-
-      {pendingPurchases.length > 0 && (
-        <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50/30 p-6">
-          <h2 className="mb-4 text-lg font-semibold text-amber-900">
-            Đơn chuyển khoản chờ xác nhận
-          </h2>
-          <div className="space-y-3">
-            {pendingPurchases.map((p) => (
-              <div
-                key={p.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-white p-4"
-              >
-                <div>
-                  <p className="font-medium">{p.document.title}</p>
-                  <p className="text-sm text-stone-500">
-                    Mã: {p.orderId} • {p.amount.toLocaleString("vi-VN")} ₫
-                  </p>
-                </div>
-                <button
-                  onClick={() => handleConfirmPayment(p.orderId)}
-                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-                >
-                  Xác nhận đã thanh toán
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {loading ? (
         <p className="text-stone-500">Đang tải...</p>
@@ -149,10 +103,16 @@ export function AdminDashboard() {
                       href={`/tai-lieu/${doc.id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-amber-700 hover:underline"
+                      className="mr-3 text-amber-700 hover:underline"
                     >
                       Xem
                     </a>
+                    <button
+                      onClick={() => handleDelete(doc.id, doc.title)}
+                      className="text-red-600 hover:underline"
+                    >
+                      Xóa
+                    </button>
                   </td>
                 </tr>
               ))}
