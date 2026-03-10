@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Document {
+  id              String   @id @default(cuid())
+  title           String
+  description     String?
+  fileUrl         String
+  fileName        String
+  fileType        String
+  previewFileUrl  String?  // PDF preview cho PPTX
+  price           Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  purchases       Purchase[]
+}
+
+model Purchase {
+  id            String   @id @default(cuid())
+  documentId    String
+  document      Document @relation(fields: [documentId], references: [id])
+  orderId       String   @unique
+  amount        Int
+  payerInfo     String?
+  paymentMethod String
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}

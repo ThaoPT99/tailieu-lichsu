@@ -1,0 +1,71 @@
+import { NextResponse } from "next/server";
+import { getAdminSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { writeFile, mkdir } from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { convertPptxToPdf } from "@/lib/pptx-to-pdf";
+
+export async function POST(req: Request) {
+  const isAdmin = await getAdminSession();
+  if (!isAdmin) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
+    const title = formData.get("title") as string;
+    const description = (formData.get("description") as string) || "";
+    const price = parseInt((formData.get("price") as string) || "0", 10);
+
+    if (!file || !title) {
+      return NextResponse.json({ error: "Thiếu file hoặc tên" }, { status: 400 });
+    }
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    if (!["pdf", "docx", "pptx"].includes(ext ?? "")) {
+      return NextResponse.json({ error: "Chỉ chấp nhận PDF, DOCX, PPTX" }, { status: 400 });
+    }
+
+    const uploadDir = path.join(process.cwd(), "uploads");
+    await mkdir(uploadDir, { recursive: true });
+
+    const fileId = uuidv4();
+    const fileName = `${fileId}.${ext}`;
+    const filePath = path.join(uploadDir, fileName);
+
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filePath, buffer);
+
+    let previewFileUrl: string | null = null;
+    if (ext === "pptx") {
+      const pdfFileName = await convertPptxToPdf(filePath, uploadDir);
+      if (pdfFileName) {
+        previewFileUrl = pdfFileName;
+      }
+    }
+
+    const document = await prisma.document.create({
+      data: {
+        title,
+        description: description || null,
+        fileUrl: fileName,
+        fileName: file.name,
+        fileType: ext ?? "pdf",
+        previewFileUrl,
+        price,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      id: document.id,
+      hasPreview: !!previewFileUrl,
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ error: "Lỗi tải lên" }, { status: 500 });
+  }
+}

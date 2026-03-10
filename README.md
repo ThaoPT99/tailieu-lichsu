@@ -1,4 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tài Liệu Lịch Sử
+
+Website bán tài liệu giáo án - Xem trước miễn phí, tải xuống qua VNPay/Momo.
+
+## Xem trước file PPTX
+
+Để người dùng xem trước file PowerPoint (PDF), cần cài **LibreOffice**:
+
+1. Tải: https://www.libreoffice.org/download/
+2. Cài đặt (mặc định: `C:\Program Files\LibreOffice\program\soffice.exe`)
+3. Nếu cài ở vị trí khác, thêm vào `.env`:
+   ```
+   LIBREOFFICE_PATH=C:\path\to\soffice.exe
+   ```
+
+Sau khi cài, khi tải lên file PPTX sẽ tự động chuyển sang PDF để xem trước. Người dùng tải xuống vẫn nhận file **PPTX gốc**.
 
 ## Getting Started
 
