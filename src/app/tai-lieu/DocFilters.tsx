@@ -5,19 +5,21 @@ import { DOC_CATEGORIES, DOC_GRADES } from "@/lib/doc-types";
 
 type DocFiltersProps = {
   basePath?: string;
+  showSearch?: boolean;
 };
 
-export function DocFilters({ basePath = "/tai-lieu" }: DocFiltersProps) {
+export function DocFilters({ basePath = "/tai-lieu", showSearch = true }: DocFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? "";
   const grade = searchParams.get("grade") ?? "";
   const price = searchParams.get("price") ?? "";
+  const q = searchParams.get("q") ?? "";
 
   const buildUrl = (params: URLSearchParams) => {
-    const q = params.toString();
-    if (basePath === "/") return q ? `/?${q}` : "/";
-    return `${basePath}${q ? `?${q}` : ""}`;
+    const s = params.toString();
+    if (basePath === "/") return s ? `/?${s}` : "/";
+    return `${basePath}${s ? `?${s}` : ""}`;
   };
 
   const updateFilter = (key: string, value: string) => {
@@ -27,11 +29,44 @@ export function DocFilters({ basePath = "/tai-lieu" }: DocFiltersProps) {
     } else {
       params.delete(key);
     }
+    if (key !== "q") params.delete("page");
     router.push(buildUrl(params));
   };
 
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const input = form.querySelector<HTMLInputElement>('input[name="q"]');
+    const value = input?.value?.trim() ?? "";
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set("q", value);
+    else params.delete("q");
+    params.delete("page");
+    router.push(buildUrl(params));
+  };
+
+  const hasFilters = category || grade || price || q;
+
   return (
     <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+      {showSearch && (
+        <form onSubmit={handleSearch} className="flex min-w-[200px] max-w-xs flex-1">
+          <input
+            key={`q-${q}`}
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Tìm theo tên, mô tả..."
+            className="w-full rounded-l-lg border border-amber-200 px-3 py-2 text-sm focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400"
+          />
+          <button
+            type="submit"
+            className="rounded-r-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          >
+            Tìm
+          </button>
+        </form>
+      )}
       <span className="text-sm font-medium text-amber-900">Lọc:</span>
       <select
         value={category}
@@ -66,7 +101,7 @@ export function DocFilters({ basePath = "/tai-lieu" }: DocFiltersProps) {
         <option value="free">Miễn phí</option>
         <option value="paid">Có phí</option>
       </select>
-      {(category || grade || price) && (
+      {hasFilters && (
         <button
           type="button"
           onClick={() => router.push(buildUrl(new URLSearchParams()))}
