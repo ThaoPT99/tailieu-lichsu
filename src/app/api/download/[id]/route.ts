@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/uploads";
+import { checkRateLimit } from "@/lib/rate-limit";
 import path from "path";
 import fs from "fs";
 
 export const dynamic = "force-dynamic";
+
+const DOWNLOAD_LIMIT = 30; // per IP per minute
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const { ok, retryAfter } = checkRateLimit(req, "download", DOWNLOAD_LIMIT);
+  if (!ok) {
+    return NextResponse.json(
+      { error: `Quá nhiều yêu cầu tải. Thử lại sau ${retryAfter} giây.` },
+      { status: 429, headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined }
+    );
+  }
   const { searchParams } = new URL(req.url);
   const free = searchParams.get("free") === "1";
   const orderId = searchParams.get("orderId");

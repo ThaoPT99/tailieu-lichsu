@@ -5,6 +5,23 @@ import { DownloadSection } from "./DownloadSection";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<import("next").Metadata> {
+  const { id } = await params;
+  const document = await prisma.document.findUnique({
+    where: { id },
+    select: { title: true, description: true },
+  });
+  if (!document) return { title: "Tài liệu" };
+  return {
+    title: `${document.title} | Tài Liệu Lịch Sử`,
+    description: document.description ?? undefined,
+  };
+}
+
 export default async function DocumentDetailPage({
   params,
 }: {

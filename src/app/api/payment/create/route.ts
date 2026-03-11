@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 import { v4 as uuidv4 } from "uuid";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3008";
+const PAYMENT_LIMIT = 10; // per IP per minute
 
 async function createPayOSUrl(orderId: string, amount: number, documentId: string) {
   const clientId = process.env.PAYOS_CLIENT_ID;
@@ -49,6 +51,13 @@ async function createPayOSUrl(orderId: string, amount: number, documentId: strin
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  const { ok, retryAfter } = checkRateLimit(req, "payment", PAYMENT_LIMIT);
+  if (!ok) {
+    return NextResponse.json(
+      { error: `Quá nhiều yêu cầu thanh toán. Thử lại sau ${retryAfter} giây.` },
+      { status: 429, headers: retryAfter ? { "Retry-After": String(retryAfter) } : undefined }
+    );
+  }
   try {
     const { documentId, method, amount } = await req.json();
 

@@ -7,11 +7,21 @@ import {
   DOCS_PER_PAGE,
   type FilterParams,
 } from "@/lib/document-filters";
+import { buildTaiLieuMetadata } from "./page-metadata";
 import { DocFilters } from "./DocFilters";
 import { DocCard } from "@/components/DocCard";
 import { Pagination } from "@/components/Pagination";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<FilterParams>;
+}): Promise<import("next").Metadata> {
+  const params = await searchParams;
+  return buildTaiLieuMetadata(params);
+}
 
 type Doc = Awaited<ReturnType<typeof prisma.document.findMany>>[number];
 
