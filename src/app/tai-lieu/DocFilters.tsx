@@ -3,12 +3,22 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { DOC_CATEGORIES, DOC_GRADES } from "@/lib/doc-types";
 
-export function DocFilters() {
+type DocFiltersProps = {
+  basePath?: string;
+};
+
+export function DocFilters({ basePath = "/tai-lieu" }: DocFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const category = searchParams.get("category") ?? "";
   const grade = searchParams.get("grade") ?? "";
   const price = searchParams.get("price") ?? "";
+
+  const buildUrl = (params: URLSearchParams) => {
+    const q = params.toString();
+    if (basePath === "/") return q ? `/?${q}` : "/";
+    return `${basePath}${q ? `?${q}` : ""}`;
+  };
 
   const updateFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -17,7 +27,7 @@ export function DocFilters() {
     } else {
       params.delete(key);
     }
-    router.push(`/tai-lieu${params.toString() ? `?${params.toString()}` : ""}`);
+    router.push(buildUrl(params));
   };
 
   return (
@@ -59,7 +69,7 @@ export function DocFilters() {
       {(category || grade || price) && (
         <button
           type="button"
-          onClick={() => router.push("/tai-lieu")}
+          onClick={() => router.push(buildUrl(new URLSearchParams()))}
           className="text-sm text-amber-700 hover:underline"
         >
           Xóa bộ lọc

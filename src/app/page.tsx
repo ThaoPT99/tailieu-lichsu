@@ -1,13 +1,37 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getCategoryLabel } from "@/lib/doc-types";
+import { DocFilters } from "@/app/tai-lieu/DocFilters";
 
 export const dynamic = "force-dynamic";
 
 type Doc = Awaited<ReturnType<typeof prisma.document.findMany>>[number];
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; grade?: string; price?: string }>;
+}) {
+  const { category, grade, price } = await searchParams;
+
+  const where: Prisma.DocumentWhereInput = {};
+  if (category && ["giao_an", "de_kiem_tra"].includes(category)) {
+    where.category = category;
+  }
+  if (grade) {
+    const g = parseInt(grade, 10);
+    if ([6, 7, 8, 9].includes(g)) where.grade = g;
+  }
+  if (price === "free") {
+    where.price = 0;
+  } else if (price === "paid") {
+    where.price = { gt: 0 };
+  }
+
   const documents = await prisma.document.findMany({
+    where: Object.keys(where).length ? where : undefined,
     orderBy: { createdAt: "desc" },
     take: 6,
   });
@@ -25,12 +49,22 @@ export default async function HomePage() {
       </section>
 
       <section>
+        <Suspense fallback={<div className="mb-6 h-12 animate-pulse rounded-xl bg-amber-100" />}>
+          <DocFilters basePath="/" />
+        </Suspense>
         <div className="mb-8 flex items-center justify-between">
           <h2 className="text-2xl font-semibold text-amber-900">
             Tài liệu mới nhất
           </h2>
           <Link
-            href="/tai-lieu"
+            href={(() => {
+              const params = new URLSearchParams();
+              if (category) params.set("category", category);
+              if (grade) params.set("grade", grade);
+              if (price) params.set("price", price);
+              const q = params.toString();
+              return q ? `/tai-lieu?${q}` : "/tai-lieu";
+            })()}
             className="text-amber-700 hover:text-amber-800 hover:underline"
           >
             Xem tất cả →
