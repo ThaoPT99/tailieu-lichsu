@@ -69,7 +69,11 @@ export async function GET(
     }
   }
 
-  if (document.fileType === "pptx" && document.previewFileUrl && !document.previewFileUrl.includes("..")) {
+  if (
+    (document.fileType === "pptx" || document.fileType === "zip") &&
+    document.previewFileUrl &&
+    !document.previewFileUrl.includes("..")
+  ) {
     const previewPath = path.join(uploadsDir, document.previewFileUrl);
     if (!document.previewFileUrl.includes("..") && fs.existsSync(previewPath)) {
       const buffer = fs.readFileSync(previewPath);

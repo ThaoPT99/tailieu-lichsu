@@ -56,6 +56,25 @@ export function DocumentView({ document }: { document: Document }) {
           setError("Không thể tải xem trước");
           setLoading(false);
         });
+    } else if (document.fileType === "zip" && document.previewFileUrl) {
+      let zipObjectUrl: string | null = null;
+      fetch(`/api/preview/${document.id}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Không tải được file");
+          return res.blob();
+        })
+        .then((blob) => {
+          zipObjectUrl = URL.createObjectURL(blob);
+          setPdfUrl(zipObjectUrl);
+          setLoading(false);
+        })
+        .catch(() => {
+          setError("Không có xem trước. Vui lòng thanh toán để tải xuống file ZIP gốc.");
+          setLoading(false);
+        });
+      return () => {
+        if (zipObjectUrl) URL.revokeObjectURL(zipObjectUrl);
+      };
     } else if (document.fileType === "zip") {
       setLoading(false);
     } else if (document.fileType === "pptx") {
@@ -178,12 +197,31 @@ export function DocumentView({ document }: { document: Document }) {
   }
 
   if (document.fileType === "zip") {
+    if (loading) {
+      return (
+        <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center">
+          <p className="text-stone-500">Đang tải xem trước...</p>
+        </div>
+      );
+    }
+    if (pdfUrl) {
+      return (
+        <div className="rounded-2xl border border-amber-200 bg-white p-4">
+          <h3 className="mb-4 font-semibold text-amber-900">
+            Xem trước (bản PDF) • Tải xuống nhận file ZIP gốc
+          </h3>
+          <div className="h-[600px] overflow-hidden rounded-lg border [user-select:none] [-webkit-user-select:none]">
+            <PdfPreviewNoCopy url={pdfUrl} className="h-full" />
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="rounded-2xl border border-amber-200 bg-white p-8 text-center">
         <p className="text-6xl">📦</p>
         <h3 className="mt-4 font-semibold text-amber-900">File ZIP</h3>
         <p className="mt-2 text-stone-600">
-          Tải xuống để xem nội dung bên trong. Không có xem trước.
+          {error ?? "Tải xuống để xem nội dung bên trong. Không có xem trước."}
         </p>
       </div>
     );

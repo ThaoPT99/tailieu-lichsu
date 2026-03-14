@@ -46,7 +46,13 @@ export async function POST(req: Request) {
     await writeFile(filePath, buffer);
 
     let previewFileUrl: string | null = null;
-    if (ext === "pptx" && previewFile && previewFile.size > 0) {
+    const previewExt = previewFile?.name?.toLowerCase().split(".").pop();
+    if (
+      (ext === "pptx" || ext === "zip") &&
+      previewFile &&
+      previewFile.size > 0 &&
+      previewExt === "pdf"
+    ) {
       const previewId = uuidv4();
       const previewFileName = `${previewId}.pdf`;
       const previewPath = path.join(uploadDir, previewFileName);

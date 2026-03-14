@@ -6,11 +6,12 @@ import { DOC_CATEGORIES, DOC_GRADES } from "@/lib/doc-types";
 export function UploadForm() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [isPptx, setIsPptx] = useState(false);
+  const [showPreviewOption, setShowPreviewOption] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    setIsPptx(file?.name.toLowerCase().endsWith(".pptx") ?? false);
+    const ext = file?.name.toLowerCase().split(".").pop();
+    setShowPreviewOption(ext === "pptx" || ext === "zip");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -38,7 +39,7 @@ export function UploadForm() {
       return;
     }
 
-    if (ext === "pptx" && previewFile && previewFile.size > 0 && !previewFile.name.toLowerCase().endsWith(".pdf")) {
+    if ((ext === "pptx" || ext === "zip") && previewFile && previewFile.size > 0 && !previewFile.name.toLowerCase().endsWith(".pdf")) {
       setMessage({ type: "error", text: "File xem trước phải là PDF" });
       return;
     }
@@ -65,7 +66,7 @@ export function UploadForm() {
       if (res.ok) {
         setMessage({ type: "success", text: "Tải lên thành công!" });
         form.reset();
-        setIsPptx(false);
+        setShowPreviewOption(false);
       } else {
         setMessage({ type: "error", text: data.error ?? "Tải lên thất bại" });
       }
@@ -148,13 +149,13 @@ export function UploadForm() {
           className="mt-1 w-full"
         />
       </div>
-      {isPptx && (
+      {showPreviewOption && (
         <div>
           <label className="block text-sm font-medium text-stone-700">
             File PDF xem trước (tùy chọn)
           </label>
           <p className="mt-0.5 text-xs text-stone-500">
-            Nếu muốn, tải lên bản PDF của slide để khách hàng xem trước. Không tải thì khách vẫn mua và tải file PPTX về.
+            Tải lên file PDF để khách hàng xem trước (vd: PDF tóm tắt nội dung ZIP, hoặc bản PDF của slide PPTX). Không tải thì khách vẫn mua và tải file gốc về.
           </p>
           <input
             type="file"
