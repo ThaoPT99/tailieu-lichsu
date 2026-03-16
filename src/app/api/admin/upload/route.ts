@@ -2,11 +2,117 @@ import { NextResponse } from "next/server";
 import { getAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getUploadsDir } from "@/lib/uploads";
-import { writeFile, mkdir } from "fs/promises";
+import { mkdir } from "fs/promises";
+import { createWriteStream } from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
+import Busboy from "busboy";
+import { Readable } from "stream";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+type ParsedUpload = {
+  fields: Record<string, string>;
+  file: { originalName: string; storedName: string; ext: string } | null;
+  previewFile: { originalName: string; storedName: string; ext: string } | null;
+};
+
+const ALLOWED_EXTS = new Set(["pdf", "docx", "pptx", "zip"]);
+const DEFAULT_MAX_UPLOAD_BYTES = 50 * 1024 * 1024; // 50MB
+
+function getMaxUploadBytes(): number {
+  const raw = process.env.MAX_UPLOAD_BYTES ?? "";
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n <= 0) return DEFAULT_MAX_UPLOAD_BYTES;
+  return Math.floor(n);
+}
+
+async function parseMultipartToDisk(req: Request, uploadDir: string): Promise<ParsedUpload> {
+  const contentType = req.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("multipart/form-data")) {
+    throw new Error("INVALID_CONTENT_TYPE");
+  }
+
+  const maxBytes = getMaxUploadBytes();
+  const bb = Busboy({
+    headers: Object.fromEntries(req.headers.entries()),
+    limits: {
+      files: 2,
+      fields: 10,
+      fileSize: maxBytes,
+    },
+  });
+
+  const parsed: ParsedUpload = { fields: {}, file: null, previewFile: null };
+  const writes: Promise<void>[] = [];
+  let fileTooLarge = false;
+
+  bb.on("field", (name, value) => {
+    parsed.fields[name] = value;
+  });
+
+  bb.on("file", (fieldName, fileStream, info) => {
+    const originalName = info.filename ?? "";
+    const ext = originalName.split(".").pop()?.toLowerCase() ?? "";
+
+    if ((fieldName !== "file" && fieldName !== "previewFile") || !originalName) {
+      fileStream.resume();
+      return;
+    }
+
+    if (fieldName === "previewFile" && ext !== "pdf") {
+      fileStream.resume();
+      return;
+    }
+
+    if (fieldName === "file" && !ALLOWED_EXTS.has(ext)) {
+      fileStream.resume();
+      return;
+    }
+
+    const id = uuidv4();
+    const storedName = `${id}.${ext}`;
+    const outPath = path.join(uploadDir, storedName);
+    const out = createWriteStream(outPath, { flags: "wx" });
+
+    fileStream.on("limit", () => {
+      fileTooLarge = true;
+      out.destroy(new Error("FILE_TOO_LARGE"));
+      fileStream.unpipe(out);
+      fileStream.resume();
+    });
+
+    const done = new Promise<void>((resolve, reject) => {
+      out.on("error", reject);
+      out.on("close", () => resolve());
+    });
+
+    fileStream.pipe(out);
+    writes.push(done);
+
+    if (fieldName === "file") {
+      parsed.file = { originalName, storedName, ext };
+    } else {
+      parsed.previewFile = { originalName, storedName, ext };
+    }
+  });
+
+  const finished = new Promise<void>((resolve, reject) => {
+    bb.on("finish", resolve);
+    bb.on("error", reject);
+  });
+
+  const body = req.body;
+  if (!body) throw new Error("MISSING_BODY");
+
+  Readable.fromWeb(body as unknown as ReadableStream).pipe(bb);
+  await finished;
+  await Promise.all(writes);
+
+  if (fileTooLarge) throw new Error("FILE_TOO_LARGE");
+  return parsed;
+}
 
 export async function POST(req: Request) {
   const isAdmin = await getAdminSession();
@@ -15,50 +121,25 @@ export async function POST(req: Request) {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
-    const previewFile = formData.get("previewFile") as File | null;
-    const title = formData.get("title") as string;
-    const description = (formData.get("description") as string) || "";
-    const price = parseInt((formData.get("price") as string) || "0", 10);
-    const category = (formData.get("category") as string) || null;
-    const gradeRaw = formData.get("grade") as string | null;
-    const grade = gradeRaw ? parseInt(gradeRaw, 10) : null;
+    const uploadDir = getUploadsDir();
+    await mkdir(uploadDir, { recursive: true });
+
+    const { fields, file, previewFile } = await parseMultipartToDisk(req, uploadDir);
+
+    const title = (fields.title ?? "").trim();
+    const description = (fields.description ?? "").trim();
+    const price = Number.parseInt(fields.price ?? "0", 10) || 0;
+    const category = (fields.category ?? "").trim() || null;
+    const grade = fields.grade ? Number.parseInt(fields.grade, 10) : null;
 
     if (!file || !title) {
       return NextResponse.json({ error: "Thiếu file hoặc tên" }, { status: 400 });
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    if (!["pdf", "docx", "pptx", "zip"].includes(ext ?? "")) {
-      return NextResponse.json({ error: "Chỉ chấp nhận PDF, DOCX, PPTX, ZIP" }, { status: 400 });
-    }
-
-    const uploadDir = getUploadsDir();
-    await mkdir(uploadDir, { recursive: true });
-
-    const fileId = uuidv4();
-    const fileName = `${fileId}.${ext}`;
-    const filePath = path.join(uploadDir, fileName);
-
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    await writeFile(filePath, buffer);
-
+    const ext = file.ext;
     let previewFileUrl: string | null = null;
-    const previewExt = previewFile?.name?.toLowerCase().split(".").pop();
-    if (
-      (ext === "pptx" || ext === "zip") &&
-      previewFile &&
-      previewFile.size > 0 &&
-      previewExt === "pdf"
-    ) {
-      const previewId = uuidv4();
-      const previewFileName = `${previewId}.pdf`;
-      const previewPath = path.join(uploadDir, previewFileName);
-      const previewBytes = await previewFile.arrayBuffer();
-      await writeFile(previewPath, Buffer.from(previewBytes));
-      previewFileUrl = previewFileName;
+    if ((ext === "pptx" || ext === "zip") && previewFile) {
+      previewFileUrl = previewFile.storedName;
     }
 
     const validCategory = category && ["giao_an", "de_kiem_tra"].includes(category) ? category : null;
@@ -68,9 +149,9 @@ export async function POST(req: Request) {
       data: {
         title,
         description: description || null,
-        fileUrl: fileName,
-        fileName: file.name,
-        fileType: ext ?? "pdf",
+        fileUrl: file.storedName,
+        fileName: file.originalName,
+        fileType: ext,
         previewFileUrl,
         price,
         category: validCategory,
@@ -84,6 +165,15 @@ export async function POST(req: Request) {
       hasPreview: !!previewFileUrl,
     });
   } catch (e) {
+    if (e instanceof Error && e.message === "FILE_TOO_LARGE") {
+      return NextResponse.json(
+        { error: `File quá lớn. Giới hạn hiện tại: ${Math.floor(getMaxUploadBytes() / (1024 * 1024))}MB` },
+        { status: 413 },
+      );
+    }
+    if (e instanceof Error && e.message === "INVALID_CONTENT_TYPE") {
+      return NextResponse.json({ error: "Content-Type không hợp lệ" }, { status: 400 });
+    }
     console.error(e);
     return NextResponse.json({ error: "Lỗi tải lên" }, { status: 500 });
   }
