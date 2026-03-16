@@ -8,6 +8,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import Busboy from "busboy";
 import { Readable } from "stream";
+import type { ReadableStream as NodeReadableStream } from "stream/web";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -106,7 +107,7 @@ async function parseMultipartToDisk(req: Request, uploadDir: string): Promise<Pa
   const body = req.body;
   if (!body) throw new Error("MISSING_BODY");
 
-  Readable.fromWeb(body as unknown as ReadableStream).pipe(bb);
+  Readable.fromWeb(body as unknown as NodeReadableStream).pipe(bb);
   await finished;
   await Promise.all(writes);
 
